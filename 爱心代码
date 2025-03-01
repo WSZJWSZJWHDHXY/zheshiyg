@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        #inputSection {
+            position: absolute;
+            text-align: center;
+            z-index: 2;
+            transition: opacity 0.5s;
+        }
+
+        #nameInput {
+            padding: 15px 30px;
+            font-size: 20px;
+            border: 3px solid #ff69b4;
+            border-radius: 30px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            margin-bottom: 25px;
+            width: 300px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        #nameInput:focus {
+            box-shadow: 0 0 15px #ff69b4;
+        }
+
+        #confirmBtn {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #ff1493, #ff0066);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #confirmBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #ff1493;
+        }
+
+        #blessing {
+            position: fixed;
+            color: #ff69b4;
+            font-size: 28px;
+            white-space: nowrap;
+            top: 50%;
+            left: -100%;
+            transform: translateY(-50%);
+            opacity: 0;
+            z-index: 3;
+            text-shadow: 0 0 10px rgba(255,105,180,0.5);
+        }
+
+        .scroll-animation {
+            animation: scrollIn 10s linear forwards;
+        }
+
+        @keyframes scrollIn {
+            0% {
+                left: -100%;
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+            }
+            85% {
+                opacity: 1;
+            }
+            100% {
+                left: 100%;
+                opacity: 0;
+            }
+        }
+
+        #heartContainer {
+            display: none;
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="inputSection">
+        <input type="text" id="nameInput" placeholder="请输入您的姓名">
+        <br>
+        <button id="confirmBtn">开启祝福</button>
+    </div>
+    <div id="blessing"></div>
+    <div id="heartContainer">
+        <canvas id="heartCanvas"></canvas>
+    </div>
+
+<script>
+// 输入控制模块
+const UI = {
+    init() {
+        this.nameInput = document.getElementById('nameInput');
+        this.confirmBtn = document.getElementById('confirmBtn');
+        this.blessing = document.getElementById('blessing');
+        this.heartContainer = document.getElementById('heartContainer');
+        this.inputSection = document.getElementById('inputSection');
+        
+        this.bindEvents();
+    },
+
+    bindEvents() {
+        this.confirmBtn.addEventListener('click', () => this.handleConfirm());
+        this.nameInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') this.handleConfirm();
+        });
+    },
+
+    handleConfirm() {
+        const name = this.nameInput.value.trim();
+        if (!name) {
+            this.showError('请输入有效姓名');
+            return;
+        }
+        
+        this.showBlessing(name);
+        this.hideInput();
+    },
+
+    showError(msg) {
+        this.nameInput.style.borderColor = '#ff0000';
+        this.nameInput.placeholder = msg;
+        setTimeout(() => {
+            this.nameInput.style.borderColor = '#ff69b4';
+            this.nameInput.placeholder = '请输入您的姓名';
+        }, 2000);
+    },
+
+    showBlessing(name) {
+        this.blessing.textContent = `${name}，愿你的未来充满幸福与喜悦！`;
+        this.blessing.classList.add('scroll-animation');
+        
+        this.blessing.addEventListener('animationend', () => {
+            this.heartContainer.style.display = 'block';
+            this.blessing.style.display = 'none';
+            HeartAnimation.init();
+        }, { once: true });
+    },
+
+    hideInput() {
+        this.inputSection.style.opacity = '0';
+    }
+};
+
+// 爱心动画模块
+const HeartAnimation = {
+    canvas: null,
+    ctx: null,
+    particles: [],
+    beatScale: 1,
+    isBeating: true,
+
+    init() {
+        this.canvas = document.getElementById('heartCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        
+        this.settings = {
+            size: 200,
+            particleCount: 1500,
+            baseHue: 355,
+            beatRange: [0.8, 1.3],
+            beatSpeed: 0.015,
+            particleSize: 2.5,
+            glowSize: 6,
+            noiseIntensity: 0.3
+        };
+
+        this.setupCanvas();
+        this.createParticles();
+        this.animate();
+    },
+
+    setupCanvas() {
+        const resize = () => {
+   
